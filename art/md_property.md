@@ -13,8 +13,8 @@ public class RefreshActivity extends Activity {
         refreshLayout.setReboundDuration(300);//回弹动画时长（毫秒）
         refreshLayout.setHeaderMaxDragRate(2);//最大显示下拉高度/Header标准高度
         refreshLayout.setFooterMaxDragRate(2);//最大显示下拉高度/Footer标准高度
-        refreshLayout.setHeaderTriggerRate(1);//触发刷新距离 与 HeaderHieght 的比率
-        refreshLayout.setFooterTriggerRate(1);//触发加载距离 与 FooterHieght 的比率
+        refreshLayout.setHeaderTriggerRate(1);//触发刷新距离 与 HeaderHieght 的比率1.0.4-6
+        refreshLayout.setFooterTriggerRate(1);//触发加载距离 与 FooterHieght 的比率1.0.4-6
         refreshLayout.setHeaderHeight(100);//Header标准高度（显示下拉高度>=标准高度 触发刷新）
         refreshLayout.setHeaderHeightPx(100);//同上-像素为单位
         refreshLayout.setFooterHeight(100);//Footer标准高度（显示上拉高度>=标准高度 触发加载）
@@ -29,12 +29,15 @@ public class RefreshActivity extends Activity {
         refreshLayout.setEnableHeaderTranslationContent(true);//是否下拉Header的时候向下平移列表或者内容
         refreshLayout.setEnableFooterTranslationContent(true);//是否上啦Footer的时候向上平移列表或者内容
         refreshLayout.setEnableLoadmoreWhenContentNotFull(true);//是否在列表不满一页时候开启上拉加载功能
+        refreshLayout.setEnableFooterFollowWhenLoadFinished(false);//是否在全部加载结束之后Footer跟随内容1.0.4-6
+        refreshLayout.setEnableOverScrollDrag(true);//是否启用越界拖动（仿苹果效果）1.0.4-6
         refreshLayout.setDisableContentWhenRefresh(false);//是否在刷新的时候禁止列表的操作
         refreshLayout.setDisableContentWhenLoading(false);//是否在加载的时候禁止列表的操作
         refreshLayout.setOnMultiPurposeListener(new OnMultiPurposeListener());//设置多功能监听器
         refreshLayout.setScrollBoundaryDecider(new ScrollBoundaryDecider());//设置滚动边界判断
         refreshLayout.setRefreshHeader(new ClassicsHeader(this));//设置Header
         refreshLayout.setRefreshFooter(new ClassicsFooter(this));//设置Footer
+        refreshLayout.setRefreshContent(new View(this));//设置刷新Content（用于动态替换空布局）1.0.4-6
         refreshLayout.autoRefresh();//自动刷新
         refreshLayout.autoLoadmore();//自动加载
         refreshLayout.autoRefresh(400);//延迟400毫秒后自动刷新
@@ -45,6 +48,9 @@ public class RefreshActivity extends Activity {
         refreshlayout.finishLoadmore(3000);//延迟3000毫秒后结束加载
         refreshlayout.finishRefresh(false);//结束刷新（刷新失败）
         refreshlayout.finishLoadmore(false);//结束加载（加载失败）
+        refreshLayout.finishLoadmoreWithNoMoreData();//完成加载并标记没有更多数据 1.0.4-6
+        refreshLayout.resetNoMoreData();//恢复没有更多数据的原始状态 1.0.4-6
+
     }
 }
 ~~~
@@ -76,6 +82,8 @@ xml代码设置
     app:srlEnableHeaderTranslationContent="true"
     app:srlEnableFooterTranslationContent="true"
     app:srlEnableLoadmoreWhenContentNotFull="false"
+    app:srlEnableFooterFollowWhenLoadFinished="false"
+    app:srlEnableOverScrollDrag="true"
     app:srlDisableContentWhenRefresh="false"
     app:srlDisableContentWhenLoading="false"
     app:srlFixedFooterViewId="@+id/header_fixed"
@@ -130,6 +138,7 @@ public class RefreshActivity extends Activity {
         header.setProgressDrawable(drawable);//设置图片
         header.setProgressResource(R.drawable.ic_progress);//设置图片资源
         header.setTimeFormat(new DynamicTimeFormat("上次更新 %s"));//设置时间格式化
+        header.setLastUpdateText("上次更新 3秒前");//手动更新时间文字设置
         header.setSpinnerStyle(SpinnerStyle.Translate);//设置状态（不支持：MatchLayout）
     }
 }
@@ -247,6 +256,8 @@ xml代码设置
 |srlEnableNestedScrolling|boolean|是否开启嵌套滚动NestedScrolling(默认false-智能开启)|
 |srlEnableScrollContentWhenLoaded|boolean|是否在加载完成之后滚动内容显示新数据（默认-true）|
 |srlEnableLoadmoreWhenContentNotFull|boolean|在内容不满一页的时候，是否可以上拉加载更多（默认-false）|
+|srlEnableFooterFollowWhenLoadFinished|boolean|是否在全部加载结束之后Footer跟随内容|
+|srlEnableOverScrollDrag|boolean|是否启用越界拖动（仿苹果效果）|
 |srlDisableContentWhenRefresh|boolean|是否在刷新的时候禁止内容的一切手势操作（默认false）|
 |srlDisableContentWhenLoading|boolean|是否在加载的时候禁止内容的一切手势操作（默认false）|
 |srlFixedHeaderViewId|id|指定固定的视图Id|
@@ -276,11 +287,14 @@ xml代码设置
 |setEnableNestedScrolling|boolean|是否开启嵌套滚动NestedScrolling（默认false-智能开启）|
 |setEnableScrollContentWhenLoaded|boolean|是否在加载完成之后滚动内容显示新数据（默认-true）|
 |setEnableLoadmoreWhenContentNotFull|boolean|在内容不满一页的时候，是否可以上拉加载更多（默认-false）|
+|setEnableFooterFollowWhenLoadFinished|boolean|是否在全部加载结束之后Footer跟随内容|
+|setEnableOverScrollDrag|boolean|是否启用越界拖动（仿苹果效果）|
 |setDisableContentWhenRefresh|boolean|是否在刷新的时候禁止内容的一切手势操作（默认false）|
 |setDisableContentWhenLoading|boolean|是否在加载的时候禁止内容的一切手势操作（默认false）|
 |setReboundInterpolator|Interpolator|设置回弹动画的插值器（默认减速）|
 |setRefreshHeader|RefreshHeader|设置指定的Header（默认贝塞尔雷达）|
 |setRefreshFooter|RefreshFooter|设置指定的Footer（默认球脉冲）|
+|setRefreshContent|View|设置刷新Content（用于动态替换空布局）|
 |setOnRefreshListener|OnRefreshListener|设置刷新监听器（默认3秒后关刷新）|
 |setOnLoadmoreListener|OnLoadmoreListener|设置加载监听器（默认3秒后关加载）|
 |setOnRefreshLoadmoreListener|OnRefreshLoadmoreListener|同时设置上面两个监听器|
@@ -291,6 +305,8 @@ xml代码设置
 |finishLoadmore|(int delayed)|完成加载，结束加载动画|
 |finishRefresh|(boolean success)|完成刷新，并设置是否成功|
 |finishLoadmore|(boolean success)|完成加载，并设置是否成功|
+|finishLoadmoreWithNoMoreData||完成加载并标记没有更多数据|
+|resetNoMoreData||恢复没有更多数据的原始状态|
 |getRefreshHeader|RefreshHeader|获取Header|
 |getRefreshFooter|RefreshFooter|获取Footer|
 |getState|RefreshState|获取当前状态|
@@ -333,3 +349,4 @@ xml代码设置
 |setEnableLastTime|boolean|是否显示上次更新时间（默认true）|
 |setTextSizeTitle|dimension|标题文字大小（默认16sp）|
 |setTextSizeTime|dimension|时间文字大小（默认12sp）|
+|setLastUpdateText|string|手动设置更新时间|

@@ -1,31 +1,29 @@
-package com.scwang.refreshlayout.fragment;
+package com.scwang.refreshlayout.fragment.using;
 
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
 import com.scwang.refreshlayout.R;
+import com.scwang.refreshlayout.activity.FragmentActivity;
 import com.scwang.refreshlayout.activity.using.AssignCodeUsingActivity;
 import com.scwang.refreshlayout.activity.using.AssignDefaultUsingActivity;
 import com.scwang.refreshlayout.activity.using.AssignXmlUsingActivity;
-import com.scwang.refreshlayout.activity.using.BasicUsingActivity;
-import com.scwang.refreshlayout.activity.using.CustomUsingActivity;
-import com.scwang.refreshlayout.activity.using.ListenerUsingActivity;
-import com.scwang.refreshlayout.activity.using.NestLayoutUsingActivity;
-import com.scwang.refreshlayout.activity.using.SnapHelperUsingActivity;
 import com.scwang.refreshlayout.adapter.BaseRecyclerAdapter;
 import com.scwang.refreshlayout.adapter.SmartViewHolder;
-import com.scwang.refreshlayout.util.StatusBarUtil;
 
 import java.util.Arrays;
 
@@ -33,20 +31,15 @@ import static android.R.layout.simple_list_item_2;
 import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
 /**
- * 使用示例
+ * 使用示例-指定样式
  * A simple {@link Fragment} subclass.
  */
-public class RefreshUsingFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class SpecifyStyleUsingFragment extends Fragment implements AdapterView.OnItemClickListener {
 
-    private enum Item {
-        Basic("基本的使用", BasicUsingActivity.class),
-        DefaultCreater("设置全局默认的Header和Footer", AssignDefaultUsingActivity.class),
-        XmlDefine("在XML中定义Header和Footer", AssignXmlUsingActivity.class),
-        CodeDefine("在代码中指定Header和Footer", AssignCodeUsingActivity.class),
-        Listener("多功能监听器", ListenerUsingActivity.class),
-        NestLayout("嵌套Layout作为内容", NestLayoutUsingActivity.class),
-        Custom("自定义Header", CustomUsingActivity.class),
-        SnapHelper("结合 SnapHelper 使用", SnapHelperUsingActivity.class),
+    public enum Item {
+        Global("全局指定", AssignDefaultUsingActivity.class),
+        Code("代码指定", AssignCodeUsingActivity.class),
+        Xml("XML指定", AssignXmlUsingActivity.class),
         ;
         public String name;
         public Class<?> clazz;
@@ -57,14 +50,22 @@ public class RefreshUsingFragment extends Fragment implements AdapterView.OnItem
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_refresh_using, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.common_independence_recycler, container, false);
     }
 
     @Override
-    public void onViewCreated(View root, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View root, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(root, savedInstanceState);
-        StatusBarUtil.setPaddingSmart(getContext(), root.findViewById(R.id.toolbar));
+
+        final Toolbar toolbar = (Toolbar)root.findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().finish();
+            }
+        });
+        toolbar.setTitle("指定样式");
 
         View view = root.findViewById(R.id.recyclerView);
         if (view instanceof RecyclerView) {
@@ -86,6 +87,10 @@ public class RefreshUsingFragment extends Fragment implements AdapterView.OnItem
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Item item = Item.values()[position];
-        startActivity(new Intent(getContext(), item.clazz));
+        if (Activity.class.isAssignableFrom(item.clazz)) {
+            startActivity(new Intent(getContext(), item.clazz));
+        } else if (Fragment.class.isAssignableFrom(item.clazz)) {
+            FragmentActivity.start(this, item.clazz);
+        }
     }
 }

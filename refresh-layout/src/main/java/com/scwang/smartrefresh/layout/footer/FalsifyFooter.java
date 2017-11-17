@@ -13,7 +13,9 @@ import android.view.Gravity;
 import android.widget.TextView;
 
 import com.scwang.smartrefresh.layout.api.RefreshFooter;
+import com.scwang.smartrefresh.layout.api.RefreshKernel;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.header.FalsifyHeader;
 import com.scwang.smartrefresh.layout.util.DensityUtil;
 
@@ -74,6 +76,13 @@ public class FalsifyFooter extends FalsifyHeader implements RefreshFooter {
 
     //<editor-fold desc="RefreshFooter">
 
+
+    @Override
+    public void onInitialized(RefreshKernel kernel, int height, int extendHeight) {
+        super.onInitialized(kernel, height, extendHeight);
+        kernel.getRefreshLayout().setEnableAutoLoadmore(false);
+    }
+
     @Override
     public void onPullingUp(float percent, int offset, int footerHeight, int extendHeight) {
 
@@ -92,6 +101,25 @@ public class FalsifyFooter extends FalsifyHeader implements RefreshFooter {
     @Override
     public boolean setLoadmoreFinished(boolean finished) {
         return false;
+    }
+
+    @Override
+    public void onStateChanged(RefreshLayout refreshLayout, RefreshState oldState, RefreshState newState) {
+        switch (newState) {
+            case None:
+            case PullToUpLoad:
+                if (mPureScrollMode != null
+                        && mPureScrollMode != refreshLayout.isEnablePureScrollMode()) {
+                    refreshLayout.setEnablePureScrollMode(mPureScrollMode);
+                }
+                break;
+            case ReleaseToLoad:
+                mPureScrollMode = refreshLayout.isEnablePureScrollMode();
+                if (!mPureScrollMode) {
+                    refreshLayout.setEnablePureScrollMode(true);
+                }
+                break;
+        }
     }
 
     //</editor-fold>

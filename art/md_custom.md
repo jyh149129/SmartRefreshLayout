@@ -45,7 +45,7 @@ SmartRefreshLayout 的Header和Footer都有多种变换方式，适应不同风�
 
 **FixedBehind 固定在后面** 和 **Scale 拉伸形变**
 
-![](gif_practive_feedlist.gif) ![](gif_Circle.gif)
+![](gif_practive_feedlist.gif) ![](gif_BezierCircle.gif)
 
 **Screen 全屏幕** 和 **Translate 平行移动**
 
@@ -331,3 +331,9 @@ public class ClassicsHeader extends LinearLayout implements RefreshHeader {
 ### 实现 RefreshFooter
 
 具体方法和 RefreshHeader 非常相似，这里就不再演示了
+
+### 成功案例
+
+[YanXuanRefresh](https://github.com/ChaserSheng/YanXuanRefresh)  
+[838514984](https://github.com/838514984/smartrefreshlayout-statusUtils)  
+[一个Android下拉刷新样式](http://www.jianshu.com/p/8f29c97eefd8)  

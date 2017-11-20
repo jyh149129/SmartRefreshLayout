@@ -855,7 +855,7 @@ public class SmartRefreshLayout extends ViewGroup implements RefreshLayout, Nest
                 || (mState == RefreshState.Refreshing && mDisableContentWhenRefresh)) {
             return false;
         }
-        if (mNestedScrollInProgress) {//嵌套滚动时，补充竖直方向不滚动，但是水平方向滚动，需要通知 onHorizontalDrag
+        if (mNestedScrollInProgress && mState != RefreshState.PullToUpLoad) {//嵌套滚动时，补充竖直方向不滚动，但是水平方向滚动，需要通知 onHorizontalDrag
             int totalUnconsumed = this.mTotalUnconsumed;
             boolean ret = superDispatchTouchEvent(e);
             //noinspection ConstantConditions

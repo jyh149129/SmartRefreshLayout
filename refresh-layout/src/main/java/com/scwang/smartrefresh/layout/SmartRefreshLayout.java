@@ -741,8 +741,28 @@ public class SmartRefreshLayout extends ViewGroup implements RefreshLayout, Nest
         mHandler = null;
         mManualLoadmore = true;
         mManualNestedScrolling = true;
+        releaseVelocityTracker();
+        releaseAnimatortListener();
     }
 
+    //释放VelocityTracker
+    private void releaseVelocityTracker() {
+        if(null != mVelocityTracker) {
+            mVelocityTracker.clear();
+            mVelocityTracker.recycle();
+            mVelocityTracker = null;
+        }
+    }
+    private void releaseAnimatortListener(){
+        if(reboundAnimator != null){
+            try {
+                reboundAnimator.removeAllUpdateListeners();
+                reboundAnimator.removeAllListeners();
+                reboundAnimator.cancel();
+                reboundAnimator = null;
+            }catch (Exception e){}
+        }
+    }
     @Override
     protected void dispatchDraw(Canvas canvas) {
         boolean isInEditMode = mEnablePreviewInEditMode && isInEditMode();
@@ -885,7 +905,9 @@ public class SmartRefreshLayout extends ViewGroup implements RefreshLayout, Nest
                 mLastSpinner = 0;
                 mTouchSpinner = mSpinner;
                 mIsBeingDragged = false;
-
+                if(mVelocityTracker == null){
+                    mVelocityTracker = VelocityTracker.obtain();
+                }
                 mVelocityTracker.clear();
                 mVelocityTracker.addMovement(e);
                 mScroller.forceFinished(true);
@@ -894,7 +916,7 @@ public class SmartRefreshLayout extends ViewGroup implements RefreshLayout, Nest
                 return true;
             case MotionEvent.ACTION_MOVE:
 //                mLastTouchY = touchY;
-                mVelocityTracker.addMovement(e);
+//                mVelocityTracker.addMovement(e);
                 float dx = touchX - mTouchX;
                 float dy = touchY - mTouchY;
                 if (!mIsBeingDragged && !mHorizontalDragged) {

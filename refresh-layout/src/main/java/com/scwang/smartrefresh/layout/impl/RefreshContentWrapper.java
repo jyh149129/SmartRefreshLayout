@@ -38,6 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static com.scwang.smartrefresh.layout.util.ScrollBoundaryUtil.canScrollDown;
+import static com.scwang.smartrefresh.layout.util.ScrollBoundaryUtil.canScrollUp;
 import static com.scwang.smartrefresh.layout.util.ScrollBoundaryUtil.isTransformedTouchPointInView;
 
 /**
@@ -79,7 +80,7 @@ public class RefreshContentWrapper implements RefreshContent {
             try {//try 不能删除，不然会出现兼容性问题
                 if (content instanceof CoordinatorLayout) {
                     kernel.getRefreshLayout().setEnableNestedScroll(false);
-                    wrapperCoordinatorLayout(((CoordinatorLayout) content), kernel.getRefreshLayout());
+                    wrapperCoordinatorLayout(((ViewGroup) content), kernel.getRefreshLayout());
                 }
             } catch (Throwable ignored) {
             }
@@ -87,7 +88,7 @@ public class RefreshContentWrapper implements RefreshContent {
         }
     }
 
-    protected void wrapperCoordinatorLayout(CoordinatorLayout layout, final RefreshLayout refreshLayout) {
+    protected void wrapperCoordinatorLayout(ViewGroup layout, final RefreshLayout refreshLayout) {
         for (int i = layout.getChildCount() - 1; i >= 0; i--) {
             View view = layout.getChildAt(i);
             if (view instanceof AppBarLayout) {
@@ -201,14 +202,8 @@ public class RefreshContentWrapper implements RefreshContent {
     }
 
     @Override
-    public void layout(int left, int top, int right, int bottom, boolean skip) {
-        if (!skip
-                || mContentView.getLeft() != left
-                || mContentView.getTop() != top
-                || mContentView.getRight() != right
-                || mContentView.getBottom() != bottom) {
-            mContentView.layout(left, top, right, bottom);
-        }
+    public void layout(int left, int top, int right, int bottom) {
+        mContentView.layout(left, top, right, bottom);
     }
 
     @Override
@@ -230,7 +225,7 @@ public class RefreshContentWrapper implements RefreshContent {
     }
 
     @Override
-    public boolean fling(int velocity) {
+    public void fling(int velocity) {
         if (mScrollableView instanceof ScrollView) {
             ((ScrollView) mScrollableView).fling(velocity);
         } else if (mScrollableView instanceof AbsListView) {
@@ -243,14 +238,11 @@ public class RefreshContentWrapper implements RefreshContent {
             ((RecyclerView) mScrollableView).fling(0, velocity);
         } else if (mScrollableView instanceof NestedScrollView) {
             ((NestedScrollView) mScrollableView).fling(velocity);
-        } else {
-            return false;
         }
-        return true;
     }
 
     @Override
-    public void setupComponent(RefreshKernel kernel, View fixedHeader, View fixedFooter) {
+    public void setUpComponent(RefreshKernel kernel, View fixedHeader, View fixedFooter) {
         findScrollableView(mContentView, kernel);
 
         if (fixedHeader != null || fixedFooter != null) {
@@ -308,56 +300,27 @@ public class RefreshContentWrapper implements RefreshContent {
     }
 
     @Override
-    public AnimatorUpdateListener onLoadingFinish(final RefreshKernel kernel, final int footerHeight, int startDelay, final int duration) {
-        if (mScrollableView != null && kernel.getRefreshLayout().isEnableScrollContentWhenLoaded()) {
-            if (!canScrollDown(mScrollableView)) {
-                return null;
-            }
-            if (mScrollableView instanceof AbsListView && !(mScrollableView instanceof ListView) && Build.VERSION.SDK_INT < 19) {
-                if (startDelay > 0) {
-                    kernel.getRefreshLayout().getLayout().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((AbsListView) mScrollableView).smoothScrollBy(footerHeight, duration);
-                        }
-                    }, startDelay);
-                } else {
-                    ((AbsListView) mScrollableView).smoothScrollBy(footerHeight, duration);
-                }
-                return null;
-            }
-            return new AnimatorUpdateListener() {
-                int lastValue = kernel.getSpinner();
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    int value = (int) animation.getAnimatedValue();
-                    try {
-                        if (mScrollableView instanceof ListView) {
-                            if (Build.VERSION.SDK_INT >= 19) {
-                                ((ListView) RefreshContentWrapper.this.mScrollableView).scrollListBy(value - lastValue);
+    public AnimatorUpdateListener scrollContentWhenFinished(final int spinner) {
+        if (mScrollableView != null && spinner != 0) {
+            if ((spinner < 0 && canScrollDown(mScrollableView)) || (spinner > 0 && canScrollUp(mScrollableView))) {
+                return new AnimatorUpdateListener() {
+                    int lastValue = spinner;
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        int value = (int) animation.getAnimatedValue();
+                        try {
+                            if (mScrollableView instanceof AbsListView) {
+                                scrollListBy((AbsListView) mScrollableView, value - lastValue);
                             } else {
-//                                ListViewCompat.scrollListBy((ListView) mScrollableView, value - lastValue);
-                                ListView listView = (ListView) RefreshContentWrapper.this.mScrollableView;
-                                final int firstPosition = listView.getFirstVisiblePosition();
-                                if (firstPosition == ListView.INVALID_POSITION) {
-                                    return;
-                                }
-                                final View firstView = listView.getChildAt(0);
-                                if (firstView == null) {
-                                    return;
-                                }
-                                final int newTop = firstView.getTop() - (value - lastValue);
-                                listView.setSelectionFromTop(firstPosition, newTop);
+                                mScrollableView.scrollBy(0, value - lastValue);
                             }
-                        } else {
-                            mScrollableView.scrollBy(0, value - lastValue);
+                        } catch (Throwable ignored) {
+                            //根据用户反馈，此处可能会有BUG
                         }
-                    } catch (Throwable ignored) {
-                        //根据用户反馈，此处可能会有BUG
+                        lastValue = value;
                     }
-                    lastValue = value;
-                }
-            };
+                };
+            }
         }
         return null;
     }
@@ -378,6 +341,29 @@ public class RefreshContentWrapper implements RefreshContent {
         }
         view.measure(childWidthSpec, childHeightSpec);
         return view.getMeasuredHeight();
+    }
+
+    protected static void scrollListBy(@NonNull AbsListView listView, int y) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            // Call the framework version directly
+            listView.scrollListBy(y);
+        } else if (listView instanceof ListView) {
+            // provide backport on earlier versions
+            final int firstPosition = listView.getFirstVisiblePosition();
+            if (firstPosition == ListView.INVALID_POSITION) {
+                return;
+            }
+
+            final View firstView = listView.getChildAt(0);
+            if (firstView == null) {
+                return;
+            }
+
+            final int newTop = firstView.getTop() - y;
+            ((ListView) listView).setSelectionFromTop(firstPosition, newTop);
+        } else {
+            listView.smoothScrollBy(y, 0);
+        }
     }
     //</editor-fold>
 

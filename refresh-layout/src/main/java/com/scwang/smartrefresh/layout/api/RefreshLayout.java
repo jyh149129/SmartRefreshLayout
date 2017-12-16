@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.listener.OnLoadmoreListener;
 import com.scwang.smartrefresh.layout.listener.OnMultiPurposeListener;
@@ -18,6 +17,7 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshLoadmoreListener;
  * Created by SCWANG on 2017/5/26.
  */
 
+@SuppressWarnings({"UnusedReturnValue", "SameParameterValue", "unused"})
 public interface RefreshLayout {
 
     RefreshLayout setFooterHeight(float dp);
@@ -151,6 +151,11 @@ public interface RefreshLayout {
     RefreshLayout setEnableScrollContentWhenLoaded(boolean enable);
 
     /**
+     * 是否在刷新完成之后滚动内容显示新数据
+     */
+    RefreshLayout setEnableScrollContentWhenRefreshed(boolean enable);
+
+    /**
      * 设置在内容不满一页的时候，是否可以上拉加载更多
      */
     RefreshLayout setEnableLoadmoreWhenContentNotFull(boolean enable);
@@ -247,6 +252,11 @@ public interface RefreshLayout {
     RefreshLayout finishLoadmore(int delayed, boolean success);
 
     /**
+     * 完成加载
+     */
+    RefreshLayout finishLoadmore(int delayed, boolean success, boolean noMoreData);
+
+    /**
      * 完成加载并标记没有更多数据
      */
     RefreshLayout finishLoadmoreWithNoMoreData();
@@ -295,13 +305,17 @@ public interface RefreshLayout {
 
     /**
      * 自动刷新
+     * @param delayed 开始延时
      */
     boolean autoRefresh(int delayed);
 
     /**
      * 自动刷新
+     * @param delayed 开始延时
+     * @param duration 拖拽动画持续时间
+     * @param dragrate 拉拽的高度比率（要求 ≥ 1 ）
      */
-    boolean autoRefresh(int delayed, float dragrate);
+    boolean autoRefresh(int delayed, int duration, float dragrate);
 
     /**
      * 自动加载
@@ -310,13 +324,17 @@ public interface RefreshLayout {
 
     /**
      * 自动加载
+     * @param delayed 开始延时
      */
     boolean autoLoadmore(int delayed);
 
     /**
      * 自动加载
+     * @param delayed 开始延时
+     * @param duration 拖拽动画持续时间
+     * @param dragrate 拉拽的高度比率（要求 ≥ 1 ）
      */
-    boolean autoLoadmore(int delayed, float dragrate);
+    boolean autoLoadmore(int delayed, int duration, float dragrate);
 
     boolean isEnableRefresh();
 

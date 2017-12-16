@@ -17,7 +17,7 @@ public interface RefreshContent {
     int getMeasuredWidth();
     int getMeasuredHeight();
     void measure(int widthSpec, int heightSpec);
-    void layout(int left, int top, int right, int bottom, boolean skip);
+    void layout(int left, int top, int right, int bottom);
 
     View getView();
     View getScrollableView();
@@ -26,12 +26,12 @@ public interface RefreshContent {
     void onActionDown(MotionEvent e);
     void onActionUpOrCancel();
 
-    boolean fling(int velocity);
-    void setupComponent(RefreshKernel kernel, View fixedHeader, View fixedFooter);
+    void fling(int velocity);
+    void setUpComponent(RefreshKernel kernel, View fixedHeader, View fixedFooter);
     void onInitialHeaderAndFooter(int headerHeight, int footerHeight);
     void setScrollBoundaryDecider(ScrollBoundaryDecider boundary);
 
     void setEnableLoadmoreWhenContentNotFull(boolean enable);
 
-    AnimatorUpdateListener onLoadingFinish(RefreshKernel kernel, int footerHeight, int startDelay, int reboundDuration);
+    AnimatorUpdateListener scrollContentWhenFinished(int spinner);
 }

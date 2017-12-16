@@ -4,8 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.AbsListView;
 
 import com.scwang.refreshlayout.R;
 import com.scwang.refreshlayout.adapter.BaseRecyclerAdapter;
@@ -40,7 +39,7 @@ public class BasicUsingActivity extends AppCompatActivity {
             }
         });
 
-        ListView listView = (ListView) findViewById(R.id.listview);
+        AbsListView listView = (AbsListView) findViewById(R.id.listview);
         listView.setAdapter(mAdapter = new BaseRecyclerAdapter<Void>(simple_list_item_2) {
             @Override
             protected void onBindViewHolder(SmartViewHolder holder, Void model, int position) {
@@ -60,7 +59,7 @@ public class BasicUsingActivity extends AppCompatActivity {
                     public void run() {
                         mAdapter.refresh(initData());
                         refreshlayout.finishRefresh();
-                        refreshlayout.setLoadmoreFinished(false);
+                        refreshlayout.resetNoMoreData();
                     }
                 }, 2000);
             }
@@ -72,13 +71,22 @@ public class BasicUsingActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         mAdapter.loadmore(initData());
+//                        if (mAdapter.getItemCount() > 60) {
+//                            Toast.makeText(getApplication(), "数据全部加载完毕", Toast.LENGTH_SHORT).show();
+//                            refreshlayout.finishLoadmoreWithNoMoreData();//将不会再次触发加载更多事件
+//                        } else {
+//                        }
                         refreshlayout.finishLoadmore();
-                        if (mAdapter.getItemCount() > 60) {
-                            Toast.makeText(getApplication(), "数据全部加载完毕", Toast.LENGTH_SHORT).show();
-                            refreshlayout.setLoadmoreFinished(true);//将不会再次触发加载更多事件
-                        }
                     }
-                }, 2000);
+                }, 10);
+            }
+        });
+
+        toolbar.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                refreshLayout.finishLoadmore();
+                return false;
             }
         });
 

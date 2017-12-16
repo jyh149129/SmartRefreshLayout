@@ -36,7 +36,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  * Created by SCWANG on 2017/5/28.
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ClassicsFooter extends RelativeLayout implements RefreshFooter {
 
     public static String REFRESH_FOOTER_PULLUP = "上拉加载更多";
@@ -277,8 +277,10 @@ public class ClassicsFooter extends RelativeLayout implements RefreshFooter {
             mLoadmoreFinished = finished;
             if (finished) {
                 mTitleText.setText(REFRESH_FOOTER_ALLLOADED);
+                mArrowView.setVisibility(GONE);
             } else {
                 mTitleText.setText(REFRESH_FOOTER_PULLUP);
+                mArrowView.setVisibility(VISIBLE);
             }
             if (mProgressDrawable != null) {
                 mProgressDrawable.stop();
@@ -286,7 +288,6 @@ public class ClassicsFooter extends RelativeLayout implements RefreshFooter {
                 mProgressView.animate().rotation(0).setDuration(300);
             }
             mProgressView.setVisibility(GONE);
-            mArrowView.setVisibility(GONE);
         }
         return true;
     }
